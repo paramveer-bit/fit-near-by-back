@@ -1,0 +1,165 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int       @id @default(autoincrement())
+  name       String
+  email      String    @unique
+  password   String
+  isVerified Boolean   @default(false)
+  otp        Int
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  Booking    Booking[]
+  Reviews    Reviews[]
+  Gym        Gym[]     @relation("GymUsers")
+  gymId      Int?
+}
+
+model Gym {
+  id          Int      @id @default(autoincrement())
+  name        String
+  location    String
+  email       String   @unique
+  logoUrl     String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Address     String?
+  latitude    Float
+  longitude   Float
+  nearBy      String?
+
+  users             User[]              @relation("GymUsers")
+  Image             Image[]
+  Facilities        Facilities[]
+  Plans             Plans[]
+  Trainer           Trainer[]
+  Booking           Booking[]
+  Reviews           Reviews[]
+  GymOperatingHours GymOperatingHours[]
+}
+
+model Image {
+  id        Int      @id @default(autoincrement())
+  url       String
+  gymId     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  gym Gym @relation(fields: [gymId], references: [id])
+}
+
+model Facilities {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  gymId       Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  gym Gym @relation(fields: [gymId], references: [id])
+}
+
+model Plans {
+  id          Int      @id @default(autoincrement())
+  name        String
+  price       Float
+  type        PlanType
+  duration    Int // Duration in months
+  description String?
+  gymId       Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  gym     Gym       @relation(fields: [gymId], references: [id])
+  Booking Booking[]
+}
+
+model Trainer {
+  id             Int      @id @default(autoincrement())
+  name           String
+  email          String   @unique
+  gymId          Int
+  bio            String?
+  profileUrl     String?
+  specialties    String[]
+  certifications String[]
+  trained        Int?
+  experience     Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  gym Gym @relation(fields: [gymId], references: [id])
+}
+
+model Booking {
+  id        Int           @id @default(autoincrement())
+  userId    Int
+  gymId     Int
+  planId    Int?
+  startDate DateTime
+  endDate   DateTime
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  status    BookingStatus @default(PENDING) // pending, confirmed, cancelled
+  user      User          @relation(fields: [userId], references: [id])
+  gym       Gym           @relation(fields: [gymId], references: [id])
+  plan      Plans?        @relation(fields: [planId], references: [id])
+}
+
+model Reviews {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  gymId     Int
+  rating    Int // Rating out of 5
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+  gym  Gym  @relation(fields: [gymId], references: [id])
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum PlanType {
+  TRIAL
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+model GymOperatingHours {
+  id      Int    @id @default(autoincrement())
+  gymId   Int
+  day     String // e.g., "Monday"
+  openAt  String // e.g., "06:00"
+  closeAt String // e.g., "22:00"
+
+  gym Gym @relation(fields: [gymId], references: [id])
+}
