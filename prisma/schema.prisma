@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -15,22 +14,24 @@ datasource db {
 }
 
 model User {
-  id         Int       @id @default(autoincrement())
-  name       String
-  email      String    @unique
-  password   String
-  isVerified Boolean   @default(false)
-  otp        Int
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  Booking    Booking[]
-  Reviews    Reviews[]
-  Gym        Gym[]     @relation("GymUsers")
-  gymId      Int?
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  phone_number String    @unique
+  password     String
+  isVerified   Boolean   @default(false)
+  otp          Int
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  Booking      Booking[]
+  Reviews      Reviews[]
+  Gym          Gym[]     @relation("GymUsers")
+  gymId        Int?
+  otpExpiresAt DateTime?
 }
 
 model Gym {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(cuid())
   name        String
   location    String
   email       String   @unique
@@ -54,9 +55,9 @@ model Gym {
 }
 
 model Image {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(cuid())
   url       String
-  gymId     Int
+  gymId     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -64,10 +65,10 @@ model Image {
 }
 
 model Facilities {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(cuid())
   name        String
   description String?
-  gymId       Int
+  gymId       String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -75,25 +76,25 @@ model Facilities {
 }
 
 model Plans {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(cuid())
   name        String
   price       Float
   type        PlanType
-  duration    Int // Duration in months
   description String?
-  gymId       Int
+  gymId       String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  isActive    Boolean  @default(true)
 
   gym     Gym       @relation(fields: [gymId], references: [id])
   Booking Booking[]
 }
 
 model Trainer {
-  id             Int      @id @default(autoincrement())
+  id             String   @id @default(cuid())
   name           String
   email          String   @unique
-  gymId          Int
+  gymId          String
   bio            String?
   profileUrl     String?
   specialties    String[]
@@ -107,10 +108,10 @@ model Trainer {
 }
 
 model Booking {
-  id        Int           @id @default(autoincrement())
-  userId    Int
-  gymId     Int
-  planId    Int?
+  id        String        @id @default(cuid())
+  userId    String
+  gymId     String
+  planId    String?
   startDate DateTime
   endDate   DateTime
   createdAt DateTime      @default(now())
@@ -122,9 +123,9 @@ model Booking {
 }
 
 model Reviews {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  gymId     Int
+  id        String   @id @default(cuid())
+  userId    String
+  gymId     String
   rating    Int // Rating out of 5
   comment   String?
   createdAt DateTime @default(now())
@@ -156,7 +157,7 @@ enum PaymentStatus {
 
 model GymOperatingHours {
   id      Int    @id @default(autoincrement())
-  gymId   Int
+  gymId   String
   day     String // e.g., "Monday"
   openAt  String // e.g., "06:00"
   closeAt String // e.g., "22:00"

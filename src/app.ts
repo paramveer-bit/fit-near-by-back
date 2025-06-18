@@ -6,7 +6,6 @@ import PrismaClient from "./prismaClient/index"
 
 
 
-
 const app = express()
 
 app.use(cookieParser())
@@ -20,6 +19,9 @@ app.get("/", (req, res) => {
     res.status(200).send("Hello, Server is running")
 }
 )
+
+
+
 
 
 app.use(express.json())
