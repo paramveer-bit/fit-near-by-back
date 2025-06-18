@@ -21,7 +21,7 @@ const signup = asyncHandler(async (req: Request, res: Response) => {
     const { name, phone_number, email, password } = req.body;
 
     // validated email and password
-    const validatedData = signUpSchema.safeParse({ email, password })
+    const validatedData = signUpSchema.safeParse({ name, phone_number, email, password })
     if (!validatedData.success) {
         throw new ApiError(400, validatedData.error.errors[0].message)
     }
@@ -78,9 +78,9 @@ const signup = asyncHandler(async (req: Request, res: Response) => {
     }
 
     // send response
-    const response = new ApiResponse("200", newUser, "User created successfully. Please verify your email to continue.")
+    const response = new ApiResponse("200", null, "User created successfully. Please verify your email to continue.")
 
-    res.status(200).json(response)
+    return res.status(200).json(response)
 
 })
 
@@ -89,9 +89,8 @@ const signIn = asyncHandler(async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
     //parser email and password
-    const validatedData = signUpSchema.safeParse({ email, password })
-    if (!validatedData.success) {
-        throw new ApiError(400, validatedData.error.errors[0].message)
+    if (!email || !password) {
+        throw new ApiError(400, "Email and password are required")
     }
 
     //find user with specific email
@@ -132,9 +131,9 @@ const signIn = asyncHandler(async (req: Request, res: Response) => {
     })
 
 
-    const response = new ApiResponse("200", JSON.stringify({ message: "User Signed in Successfully" }))
+    const response = new ApiResponse("200", null, "User Signed in Successfully")
 
-    res.status(200).json(response)
+    return res.status(200).json(response)
 
 })
 
@@ -174,8 +173,8 @@ const verifyUser = asyncHandler(async (req: Request, res: Response) => {
     if (user.otpExpiresAt < new Date()) {
         throw new ApiError(400, "Otp expired")
     }
-
-    if (user.otp !== otp) {
+    if (Number(user.otp) !== Number(otp)) {
+        console.log("jhbhjhj")
         throw new ApiError(400, "Invalid otp")
     }
 
@@ -196,10 +195,24 @@ const verifyUser = asyncHandler(async (req: Request, res: Response) => {
         throw new ApiError(500, "Error in updating user")
     }
 
+    if (!process.env.JWT_SECRET) {
+        throw new ApiError(500, "JWT secret is not defined")
+    }
+
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1d" })
+
+    //store in cookieParser
+    res.cookie("token", token, {
+        httpOnly: true,
+        sameSite: "none",
+        secure: true,
+        expires: new Date(Date.now() + 86400000), // Expire in 1 day
+    })
+
     // send response
     const response = new ApiResponse("200", null, "User verified successfully")
 
-    res.status(200).json(response)
+    return res.status(200).json(response)
 
 })
 
@@ -239,7 +252,8 @@ const resendOtp = asyncHandler(async (req: Request, res: Response) => {
             id: user.id
         },
         data: {
-            otp: otp
+            otp: otp,
+            otpExpiresAt: new Date(Date.now() + 600000), // 10 minutes
         }
     })
 
@@ -289,9 +303,9 @@ const isSignedIn = asyncHandler(async (req: Request, res: Response) => {
         }
     })
 
-    const response = new ApiResponse("200", user, JSON.stringify({ "message": "User is signed in" }))
+    const response = new ApiResponse("200", user, "User is signed in")
 
-    res.status(200).json(response)
+    return res.status(200).json(response)
 
 })
 

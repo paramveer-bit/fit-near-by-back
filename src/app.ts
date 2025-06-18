@@ -29,7 +29,11 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }))
 app.use(express.static("public"))
 
 // Router import
-// import userRouter from "./routers/user.router"
+import userRouter from "./routers/user.router"
+
+app.use("/api/v1/user", userRouter)
+
+
 
 
 // Roueters
