@@ -25,10 +25,10 @@ export const uploadImage = async (file: Express.Multer.File) => {
     try {
         await s3.send(command);
         console.log("File uploaded successfully.");
-        return "File uploaded successfully.";
+        return true;
     } catch (error) {
         console.error("Error uploading file:", error);
-        return "Error uploading file.";
+        return false;
     }
 };
 
@@ -59,10 +59,10 @@ export const deleteImage = async (key: string) => {
         const command = new DeleteObjectCommand(deleteParams);
         await s3.send(command);
         console.log("File deleted successfully.");
-        return "File deleted successfully.";
+        return true;
     } catch (error) {
         console.error("Error deleting file:", error);
-        return "Error deleting file.";
+        return false;
     }
 }
 

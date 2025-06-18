@@ -7,7 +7,6 @@ import { z } from "zod"
 import Mailer from "../../mailSender/sendMail";
 import jwt from "jsonwebtoken"
 import bcrypt from "bcryptjs";
-import { upload } from "../../middelwares/multer.middelware";
 
 const signUpSchema = z.object({
     name: z.string().min(3, { message: "Name should be of at least 3 size" }).max(50, { message: "Name should be of at max 50 size" }),
@@ -297,27 +296,7 @@ const isSignedIn = asyncHandler(async (req: Request, res: Response) => {
 })
 
 
-const get = asyncHandler(async (req: Request, res: Response) => {
-    const getObjectParams = {
-        Bucket: process.env.BUCKET_NAME,
-        Key: "WhatsApp Image 2023-06-17 at 14.14.47.jpg"
-    };
-
-    try {
-        const command = new GetObjectCommand(getObjectParams);
-        const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
-        console.log("Signed URL generated:", url);
-        res.status(200).json({ url });
-    } catch (error) {
-        console.error("Error generating signed URL:", error);
-        res.status(500).send("Error generating signed URL.");
-    }
-})
 
 
 
-
-
-
-
-export { signup, signIn, verifyUser, resendOtp, signOut, isSignedIn, fun, get }
+export { signup, signIn, verifyUser, resendOtp, signOut, isSignedIn }
