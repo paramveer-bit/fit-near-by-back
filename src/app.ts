@@ -34,12 +34,14 @@ import gymRouter from "./routers/gym.router"
 import facilitiesRouter from "./routers/Facilities.router"
 import planRouter from "./routers/plan.router"
 import reviewRouter from "./routers/review.router"
+import trainerRouter from "./routers/trainer.router"
 
 app.use("/api/v1/user", userRouter)
 app.use("/api/v1/gym", gymRouter)
 app.use("/api/v1/facilities", facilitiesRouter)
 app.use("/api/v1/plans", planRouter)
 app.use("/api/v1/reviews", reviewRouter)
+app.use("/api/v1/trainers", trainerRouter)
 
 
 

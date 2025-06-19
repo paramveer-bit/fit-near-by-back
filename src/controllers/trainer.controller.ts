@@ -12,7 +12,6 @@ const addTrainerSchema = z.object({
     email: z.string().email({ message: "Invalid email" }).min(5).max(255),
     experience: z.number().min(0, { message: "Experience should be a positive number" }),
     bio: z.string().min(10, { message: "Bio should be of at least 10 size" }).max(500, { message: "Bio should be of at max 500 size" }),
-    specialties: z.string().min(3, { message: "Speciality should be of at least 3 size" }).max(100, { message: "Speciality should be of at max 100 size" }),
     trained: z.number().min(0, { message: "Trained should be a positive number" }),
 });
 
@@ -21,15 +20,11 @@ const addTrainer = asyncHandler(async (req: Request, res: Response) => {
     const { gymId } = req.params;
 
     // Validate input data
-    const validatedData = addTrainerSchema.safeParse({ name, email, experience, bio, specialties, trained });
+    const validatedData = addTrainerSchema.safeParse({ name, email, experience, bio, trained });
     if (!validatedData.success) {
         throw new ApiError(400, validatedData.error.errors[0].message);
     }
 
-    const file = req.file;
-    if (!file) {
-        throw new ApiError(400, "No Image Given");
-    }
 
     // Validate gymId
     if (!gymId) {
@@ -64,10 +59,9 @@ const addTrainer = asyncHandler(async (req: Request, res: Response) => {
             email,
             experience,
             bio,
-            specialties,
-            trained,
+            specialties: specialties,
+            trained: trained,
             gymId,
-            profileUrl: file.originalname, // Assuming the image is stored with the original name
         },
     });
 
@@ -112,7 +106,7 @@ const deleteTrainer = asyncHandler(async (req: Request, res: Response) => {
     res.status(200).json(response);
 });
 
-const getAllTRainers = asyncHandler(async (req: Request, res: Response) => {
+const getAllTrainers = asyncHandler(async (req: Request, res: Response) => {
     const { gymId } = req.params;
 
     if (!gymId) {
@@ -139,3 +133,8 @@ const getAllTRainers = asyncHandler(async (req: Request, res: Response) => {
     res.status(200).json(response);
 });
 
+export {
+    addTrainer,
+    deleteTrainer,
+    getAllTrainers
+};
