@@ -11,17 +11,16 @@ const addReview = asyncHandler(async (req: Request, res: Response) => {
     const user_id = req.user_id;
     const { rating, comment } = req.body;
     const { gymId } = req.params;
-
     // Validate data
     const ReviewSchema = z.object({
         rating: z.number().min(1, { message: "Rating should be at least 1" }).max(5, { message: "Rating should be at most 5" }),
         comment: z.string().max(500, { message: "Comment should be at most 500 characters" }),
-        userId: z.string().uuid({ message: "Invalid user ID format" })
     });
 
-    const validatedData = ReviewSchema.safeParse({ rating, comment, user_id });
+    const validatedData = ReviewSchema.safeParse({ rating, comment });
 
     if (!validatedData.success) {
+        console.log("Validation Error:", validatedData.error.errors);
         throw new ApiError(400, validatedData.error.errors[0].message);
     }
 
@@ -159,3 +158,6 @@ const deleteReview = asyncHandler(async (req: Request, res: Response) => {
     const response = new ApiResponse("200", null, "Review deleted successfully");
     return res.status(200).json(response);
 })
+
+
+export { addReview, getGymReviews, getUserReviews, deleteReview };
