@@ -13,10 +13,11 @@ import { uploadImage, deleteImage, getImage } from "../helpers/Image.handler";
 
 
 const addImage = asyncHandler(async (req: Request, res: Response) => {
-    const { gymId } = req.body;
+    const { gymId } = req.params;
     if (!gymId) {
         throw new ApiError(400, "Gym ID is required.");
     }
+    console.log("Gym ID:", gymId);
     const gym = await PrismaClient.gym.findUnique({
         where: {
             id: gymId
@@ -36,6 +37,8 @@ const addImage = asyncHandler(async (req: Request, res: Response) => {
     const imageName = crypto.randomBytes(16).toString("hex") + "-" + gymId;
 
     file.originalname = imageName
+
+    console.log("File to be uploaded:", file);
 
     const uploaded = await uploadImage(file);
     if (!uploaded) {
@@ -121,7 +124,7 @@ const getAllImagesByGymId = asyncHandler(async (req: Request, res: Response) => 
         throw new ApiError(404, "No images found for this gym.");
     }
 
-    const response = new ApiResponse("200", images, "Images retrieved successfully");
+    const response = new ApiResponse("200", imageUrls, "Images retrieved successfully");
     res.status(200).json(response);
 })
 
@@ -137,16 +140,12 @@ const addGym = asyncHandler(async (req: Request, res: Response) => {
         location: z.string()
     });
 
+
     const parsedData = gymSchema.safeParse(req.body);
     if (!parsedData.success) {
         throw new ApiError(400, "Invalid gym data", parsedData.error.errors);
     }
     const { name, address, email, description, lattitude, longitude, nearby, location } = parsedData.data;
-
-    const file = req.file;
-    if (!file) {
-        throw new ApiError(400, "No Image Given");
-    }
 
     const existingGym = await PrismaClient.gym.findUnique({
         where: {
@@ -158,12 +157,7 @@ const addGym = asyncHandler(async (req: Request, res: Response) => {
         throw new ApiError(400, "Gym with this email already exists");
     }
 
-    file.originalname = crypto.randomBytes(16).toString("hex") + "-" + file.originalname;
 
-    const uploaded = await uploadImage(file);
-    if (!uploaded) {
-        throw new ApiError(500, "Failed to upload image.");
-    }
 
     const newGym = await PrismaClient.gym.create({
         data: {
@@ -175,7 +169,6 @@ const addGym = asyncHandler(async (req: Request, res: Response) => {
             longitude: Number(longitude),
             location,
             nearBy: nearby,
-            logoUrl: file.originalname, // Assuming the image is stored with the original name
         },
     });
     if (!newGym) {
@@ -208,6 +201,8 @@ const getGymById = asyncHandler(async (req: Request, res: Response) => {
     res.status(200).json(response);
 });
 
+
+export { addGym, getGymById, addImage, deleteImageById, getAllImagesByGymId };
 
 
 

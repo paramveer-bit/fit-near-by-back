@@ -11,11 +11,12 @@ enum PlanType {
     QUARTERLY,
     YEARLY
 }
+
 const Plan = z.object({
     name: z.string().min(3, { message: "Name should be of at least 3 size" }).max(50, { message: "Name should be of at max 50 size" }),
     price: z.number().min(0, { message: "Price should be a positive number" }),
     description: z.string().max(255, { message: "Description should be of at max 255 size" }),
-    type: z.nativeEnum(PlanType)
+    type: z.enum(["TRIAL", "MONTHLY", "QUARTERLY", "YEARLY"])
 })
 
 const addPlan = asyncHandler(async (req: Request, res: Response) => {
@@ -125,3 +126,5 @@ const enablePlan = asyncHandler(async (req: Request, res: Response) => {
     const response = new ApiResponse("200", null, "Plan enabled successfully");
     return res.status(200).json(response);
 })
+
+export { addPlan, getPlans, disablePlan, enablePlan }

@@ -83,3 +83,5 @@ const deleteFacility = asyncHandler(async (req: Request, res: Response) => {
     const response = new ApiResponse("200", null, "Facility deleted successfully");
     return res.status(200).json(response);
 })
+
+export { addFacility, getFacilities, deleteFacility };

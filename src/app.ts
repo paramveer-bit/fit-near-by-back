@@ -30,8 +30,14 @@ app.use(express.static("public"))
 
 // Router import
 import userRouter from "./routers/user.router"
+import gymRouter from "./routers/gym.router"
+import facilitiesRouter from "./routers/Facilities.router"
+import planRouter from "./routers/plan.router"
 
 app.use("/api/v1/user", userRouter)
+app.use("/api/v1/gym", gymRouter)
+app.use("/api/v1/facilities", facilitiesRouter)
+app.use("/api/v1/plans", planRouter)
 
 
 
