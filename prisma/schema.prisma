@@ -31,18 +31,19 @@ model User {
 }
 
 model Gym {
-  id          String   @id @default(cuid())
-  name        String
-  location    String
-  email       String   @unique
-  logoUrl     String?
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  address     String?
-  latitude    Float
-  longitude   Float
-  nearBy      String?
+  id           String   @id @default(cuid())
+  name         String
+  location     String
+  email        String   @unique
+  logoUrl      String?
+  description  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  address      String?
+  latitude     Float
+  longitude    Float
+  nearBy       String?
+  locationLink String?
 
   users             User[]              @relation("GymUsers")
   Image             Image[]
@@ -76,15 +77,16 @@ model Facilities {
 }
 
 model Plans {
-  id          String   @id @default(cuid())
-  name        String
-  price       Float
-  type        PlanType
-  description String?
-  gymId       String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  isActive    Boolean  @default(true)
+  id        String   @id @default(cuid())
+  name      String
+  oldprice  Float
+  newprice  Float
+  type      PlanType
+  featured  String[]
+  gymId     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isActive  Boolean  @default(true)
 
   gym     Gym       @relation(fields: [gymId], references: [id])
   Booking Booking[]
@@ -156,7 +158,7 @@ enum PaymentStatus {
 }
 
 model GymOperatingHours {
-  id      Int    @id @default(autoincrement())
+  id      String @id @default(cuid())
   gymId   String
   day     String // e.g., "Monday"
   openAt  String // e.g., "06:00"

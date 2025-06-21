@@ -1,16 +1,17 @@
 import { Router } from "express";
-import auth from "../middelwares/auth.middelware";
+import adminAuth from "../middelwares/admin.middelware";
 import { upload } from "../middelwares/multer.middelware";
-import { addGym, getGymById, addImage, deleteImageById, getAllImagesByGymId } from "../controllers/gym.controller";
+import { addGym, getAllgyms, getGymById, addImage, deleteImageById, getAllImagesByGymId } from "../controllers/gym.controller";
 
 const router = Router();
 
 
-router.post("/addgym", addGym);
+router.post("/addgym", adminAuth, addGym);
 router.get("/:gymId", getGymById);
-router.post("/:gymId/addimage", upload, addImage);
-router.delete("/deleteimage/:imageId", deleteImageById);
+router.post("/:gymId/addimage", upload, adminAuth, addImage);
+router.delete("/deleteimage/:imageId", adminAuth, deleteImageById);
 router.get("/:gymId/images", getAllImagesByGymId);
+router.get("/", getAllgyms);
 export default router;
 
 

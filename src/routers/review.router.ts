@@ -1,6 +1,6 @@
 import { Router } from "express";
 import auth from "../middelwares/auth.middelware";
-import { upload } from "../middelwares/multer.middelware";
+import adminAuth from "../middelwares/admin.middelware";
 import { addReview, getGymReviews, getUserReviews, deleteReview } from "../controllers/reviews.controller";
 
 const router = Router();

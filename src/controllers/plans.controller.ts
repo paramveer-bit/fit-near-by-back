@@ -4,6 +4,7 @@ import ApiResponse from "../helpers/ApiResponse";
 import { Request, Response } from "express";
 import PrismaClient from "../prismaClient/index"
 import { z } from "zod"
+import { features } from "process";
 
 enum PlanType {
     TRIAL,
@@ -14,17 +15,19 @@ enum PlanType {
 
 const Plan = z.object({
     name: z.string().min(3, { message: "Name should be of at least 3 size" }).max(50, { message: "Name should be of at max 50 size" }),
-    price: z.number().min(0, { message: "Price should be a positive number" }),
-    description: z.string().max(255, { message: "Description should be of at max 255 size" }),
+    oldprice: z.number().min(0, { message: "Price should be a positive number" }),
+    newprice: z.number().min(0, { message: "Price should be a positive number" }),
+    featured: z.array(z.string()).min(1, { message: "At least one feature is required" }),
     type: z.enum(["TRIAL", "MONTHLY", "QUARTERLY", "YEARLY"])
 })
 
 const addPlan = asyncHandler(async (req: Request, res: Response) => {
-    const { name, price, description, type } = req.body;
+    const { oldprice, newprice, featured, type, name } = req.body;
     const { gymId } = req.params
+    console.log(req.body)
 
     // validated data
-    const validatedData = Plan.safeParse({ name, price, description, type });
+    const validatedData = Plan.safeParse({ oldprice, newprice, featured, type, name });
     if (!validatedData.success) {
         throw new ApiError(400, validatedData.error.errors[0].message);
     }
@@ -34,8 +37,9 @@ const addPlan = asyncHandler(async (req: Request, res: Response) => {
     const newPlan = await PrismaClient.plans.create({
         data: {
             name,
-            price,
-            description,
+            oldprice,
+            newprice,
+            featured,
             type,
             gym: {
                 connect: {
@@ -71,7 +75,7 @@ const getPlans = asyncHandler(async (req: Request, res: Response) => {
     return res.status(200).json(response);
 })
 
-const disablePlan = asyncHandler(async (req: Request, res: Response) => {
+const togglePlan = asyncHandler(async (req: Request, res: Response) => {
     const { planId } = req.params;
 
     // check if plan exists
@@ -91,7 +95,7 @@ const disablePlan = asyncHandler(async (req: Request, res: Response) => {
             id: planId
         },
         data: {
-            isActive: false
+            isActive: !plan.isActive
         }
     });
 
@@ -99,32 +103,5 @@ const disablePlan = asyncHandler(async (req: Request, res: Response) => {
     return res.status(200).json(response);
 })
 
-const enablePlan = asyncHandler(async (req: Request, res: Response) => {
-    const { planId } = req.params;
 
-    // check if plan exists
-    const plan = await PrismaClient.plans.findUnique({
-        where: {
-            id: planId
-        }
-    });
-
-    if (!plan) {
-        throw new ApiError(404, "Plan not found");
-    }
-
-    // enable plan
-    await PrismaClient.plans.update({
-        where: {
-            id: planId
-        },
-        data: {
-            isActive: true
-        }
-    });
-
-    const response = new ApiResponse("200", null, "Plan enabled successfully");
-    return res.status(200).json(response);
-})
-
-export { addPlan, getPlans, disablePlan, enablePlan }
+export { addPlan, getPlans, togglePlan }

@@ -303,7 +303,15 @@ const isSignedIn = asyncHandler(async (req: Request, res: Response) => {
         }
     })
 
-    const response = new ApiResponse("200", user, "User is signed in")
+    let response;
+    if (user_id === "cmc213wx40001umigdqfa0d0s") {
+        response = new ApiResponse("200", { ...user, role: "admin" }, "User is signed in")
+
+    }
+    else {
+        response = new ApiResponse("200", { ...user, role: "user" }, "User is signed in")
+    }
+
 
     return res.status(200).json(response)
 

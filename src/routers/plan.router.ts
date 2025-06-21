@@ -1,14 +1,12 @@
 import { Router } from "express";
-import auth from "../middelwares/auth.middelware";
-import { upload } from "../middelwares/multer.middelware";
-import { addPlan, getPlans, disablePlan, enablePlan } from "../controllers/plans.controller";
+import adminAuth from "../middelwares/admin.middelware";
+import { addPlan, getPlans, togglePlan, } from "../controllers/plans.controller";
 
 const router = Router();
 
-router.post("/:gymId", addPlan);
+router.post("/:gymId", adminAuth, addPlan);
 router.get("/:gymId", getPlans);
-router.delete("/:planId", disablePlan);
-router.put("/:planId", enablePlan);
+router.get("/toggle/:planId", adminAuth, togglePlan);
 
 export default router;
 

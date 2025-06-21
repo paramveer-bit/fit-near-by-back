@@ -5,22 +5,23 @@ import { Request, Response } from "express";
 import PrismaClient from "../prismaClient/index"
 import { z } from "zod"
 import { uploadImage, deleteImage, getImage } from "../helpers/Image.handler";
+import crypto from "crypto";
 
 
 const addTrainerSchema = z.object({
     name: z.string().min(3, { message: "Name should be of at least 3 size" }).max(50, { message: "Name should be of at max 50 size" }),
     email: z.string().email({ message: "Invalid email" }).min(5).max(255),
     experience: z.number().min(0, { message: "Experience should be a positive number" }),
-    bio: z.string().min(10, { message: "Bio should be of at least 10 size" }).max(500, { message: "Bio should be of at max 500 size" }),
-    trained: z.number().min(0, { message: "Trained should be a positive number" }),
+    bio: z.string(),
+    // trained: z.number().min(0, { message: "Trained should be a positive number" }),
 });
 
 const addTrainer = asyncHandler(async (req: Request, res: Response) => {
-    const { name, email, experience, bio, specialties, trained } = req.body;
+    const { name, email, experience, bio, specialties, profileUrl, trained } = req.body;
     const { gymId } = req.params;
 
     // Validate input data
-    const validatedData = addTrainerSchema.safeParse({ name, email, experience, bio, trained });
+    const validatedData = addTrainerSchema.safeParse({ name, email, experience, bio });
     if (!validatedData.success) {
         throw new ApiError(400, validatedData.error.errors[0].message);
     }
@@ -60,8 +61,9 @@ const addTrainer = asyncHandler(async (req: Request, res: Response) => {
             experience,
             bio,
             specialties: specialties,
-            trained: trained,
+            profileUrl: profileUrl || null, // Optional profile image URL
             gymId,
+            trained: Number(trained) || 0, // Default to 0 if not provided
         },
     });
 
@@ -129,12 +131,44 @@ const getAllTrainers = asyncHandler(async (req: Request, res: Response) => {
         },
     });
 
+    for (const trainer of trainers) {
+        if (trainer.profileUrl) {
+            const image = await getImage(trainer.profileUrl);
+            if (image) {
+                trainer.profileUrl = image;
+            } else {
+                trainer.profileUrl = null; // Set to null if image retrieval fails
+            }
+        }
+    }
+
     const response = new ApiResponse("200", trainers, "Trainers fetched successfully");
     res.status(200).json(response);
 });
 
+const uploadTrainerImage = asyncHandler(async (req: Request, res: Response) => {
+    const file = req.file;
+    if (!file) {
+        throw new ApiError(400, "No file uploaded.");
+    }
+
+    const imageName = crypto.randomBytes(16).toString("hex");
+
+    file.originalname = imageName
+
+
+    const uploaded = await uploadImage(file);
+    if (!uploaded) {
+        throw new ApiError(500, "Failed to upload image.");
+    }
+    console.log("Image uploaded successfully:", file.originalname);
+    const response = new ApiResponse("200", { url: file.originalname }, "Image added successfully");
+    res.status(200).json(response);
+})
+
 export {
     addTrainer,
     deleteTrainer,
-    getAllTrainers
+    getAllTrainers,
+    uploadTrainerImage
 };

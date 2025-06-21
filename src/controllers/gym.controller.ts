@@ -17,7 +17,6 @@ const addImage = asyncHandler(async (req: Request, res: Response) => {
     if (!gymId) {
         throw new ApiError(400, "Gym ID is required.");
     }
-    console.log("Gym ID:", gymId);
     const gym = await PrismaClient.gym.findUnique({
         where: {
             id: gymId
@@ -134,18 +133,19 @@ const addGym = asyncHandler(async (req: Request, res: Response) => {
         address: z.string().min(1, "Gym address is required"),
         email: z.string().email("Invalid email format"),
         description: z.string().min(1, "Gym description is required"),
-        lattitude: z.string().min(1, "Gym latitude is required"),
-        longitude: z.string().min(1, "Gym longitude is required"),
-        nearby: z.string().min(1, "Gym nearby location is required"),
-        location: z.string()
+        latitude: z.number(),
+        longitude: z.number(),
+        nearBy: z.string().min(1, "Gym nearby location is required"),
+        location: z.string(),
+        locationLink: z.string()
     });
-
+    console.log("Request body:", req.body);
 
     const parsedData = gymSchema.safeParse(req.body);
     if (!parsedData.success) {
         throw new ApiError(400, "Invalid gym data", parsedData.error.errors);
     }
-    const { name, address, email, description, lattitude, longitude, nearby, location } = parsedData.data;
+    const { name, address, email, description, latitude, longitude, nearBy, location, locationLink } = parsedData.data;
 
     const existingGym = await PrismaClient.gym.findUnique({
         where: {
@@ -165,15 +165,41 @@ const addGym = asyncHandler(async (req: Request, res: Response) => {
             address,
             email,
             description,
-            latitude: Number(lattitude),
+            latitude: Number(latitude),
             longitude: Number(longitude),
             location,
-            nearBy: nearby,
+            nearBy: nearBy,
+            locationLink
         },
     });
     if (!newGym) {
         throw new ApiError(500, "Failed to create gym.");
     }
+
+    const operatingHours = [
+        { day: "Monday", openAt: "06:00", closeAt: "22:00" },
+        { day: "Tuesday", openAt: "06:00", closeAt: "22:00" },
+        { day: "Wednesday", openAt: "06:00", closeAt: "22:00" },
+        { day: "Thursday", openAt: "06:00", closeAt: "22:00" },
+        { day: "Friday", openAt: "06:00", closeAt: "22:00" },
+        { day: "Saturday", openAt: "08:00", closeAt: "20:00" },
+        { day: "Sunday", openAt: "08:00", closeAt: "20:00" }
+    ];
+    const operatingHoursPromises = operatingHours.map((hour) =>
+        PrismaClient.gymOperatingHours.create({
+            data: {
+                day: hour.day,
+                openAt: hour.openAt,
+                closeAt: hour.closeAt,
+                gymId: newGym.id
+            }
+        })
+    );
+
+    await Promise.all(operatingHoursPromises);
+    // Send a welcome email to the gym owner
+
+
 
     const response = new ApiResponse("200", newGym, "Gym added successfully");
     res.status(200).json(response);
@@ -201,8 +227,18 @@ const getGymById = asyncHandler(async (req: Request, res: Response) => {
     res.status(200).json(response);
 });
 
+const getAllgyms = asyncHandler(async (req: Request, res: Response) => {
+    const gyms = await PrismaClient.gym.findMany();
+    if (gyms.length === 0) {
+        throw new ApiError(404, "No gyms found.");
+    }
 
-export { addGym, getGymById, addImage, deleteImageById, getAllImagesByGymId };
+    const response = new ApiResponse("200", gyms, "Gyms retrieved successfully");
+    res.status(200).json(response);
+})
+
+
+export { addGym, getGymById, addImage, deleteImageById, getAllImagesByGymId, getAllgyms };
 
 
 
