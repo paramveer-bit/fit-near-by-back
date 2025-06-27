@@ -91,7 +91,9 @@ const getGymReviews = asyncHandler(async (req: Request, res: Response) => {
                     name: true,
                     email: true
                 }
-            }
+            },
+
+
         }
     });
 

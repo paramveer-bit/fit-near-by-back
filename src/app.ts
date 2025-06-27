@@ -36,6 +36,8 @@ import planRouter from "./routers/plan.router"
 import reviewRouter from "./routers/review.router"
 import trainerRouter from "./routers/trainer.router"
 import gymTimeRouter from "./routers/gymTime.router"
+import bookingRouter from "./routers/booking.router"
+import inquiryRouter from "./routers/inquiry.router"
 
 app.use("/api/v1/user", userRouter)
 app.use("/api/v1/gym", gymRouter)
@@ -44,6 +46,9 @@ app.use("/api/v1/plans", planRouter)
 app.use("/api/v1/reviews", reviewRouter)
 app.use("/api/v1/trainers", trainerRouter)
 app.use("/api/v1/gym-time", gymTimeRouter)
+app.use("/api/v1/booking", bookingRouter)
+app.use("/api/v1/inquiry", inquiryRouter)
+
 
 
 

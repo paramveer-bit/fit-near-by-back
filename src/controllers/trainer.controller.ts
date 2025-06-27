@@ -161,7 +161,6 @@ const uploadTrainerImage = asyncHandler(async (req: Request, res: Response) => {
     if (!uploaded) {
         throw new ApiError(500, "Failed to upload image.");
     }
-    console.log("Image uploaded successfully:", file.originalname);
     const response = new ApiResponse("200", { url: file.originalname }, "Image added successfully");
     res.status(200).json(response);
 })

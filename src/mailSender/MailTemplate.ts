@@ -1,18 +1,18 @@
 
 interface EmailTemplateProps {
-    username: string;
-    code: string;
+  username: string;
+  code: string;
 }
 
 const EmailTemplate = ({
-    username,
-    code
+  username,
+  code
 }: EmailTemplateProps): string => (
-    `<html>
+  `<html>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Welcome to Silent Whisper</title>
+        <title>Welcome to Fit Near By</title>
       </head>
       <body style={{
         backgroundColor: '#ffffff',
@@ -30,7 +30,7 @@ const EmailTemplate = ({
                 marginBottom: '20px',
                 textAlign: 'center',
               }}>
-                Welcome to Silent Whisper
+                Welcome to Fit Near By
               </h1>
               <p style={{
                 color: '#333333',

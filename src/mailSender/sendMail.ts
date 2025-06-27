@@ -9,10 +9,6 @@ export default async function sendVerificationMail(
 ): Promise<any> {
 
     try {
-        const html = `  <h3>Hello User <b>${username}</b> ,Congrats on regestring on SilentWhispers.</h3>
-        <p>Your Code is</p> <h1>${verificationCode}</h1>
-        `
-
         // console.log(process.env.EMAIL)
         // console.log(process.env.PASSWORD)
         const res = await MailHelper({

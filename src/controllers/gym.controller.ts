@@ -137,7 +137,8 @@ const addGym = asyncHandler(async (req: Request, res: Response) => {
         longitude: z.number(),
         nearBy: z.string().min(1, "Gym nearby location is required"),
         location: z.string(),
-        locationLink: z.string()
+        locationLink: z.string(),
+        logoUrl: z.string()
     });
     console.log("Request body:", req.body);
 
@@ -145,7 +146,7 @@ const addGym = asyncHandler(async (req: Request, res: Response) => {
     if (!parsedData.success) {
         throw new ApiError(400, "Invalid gym data", parsedData.error.errors);
     }
-    const { name, address, email, description, latitude, longitude, nearBy, location, locationLink } = parsedData.data;
+    const { name, address, email, description, latitude, longitude, nearBy, location, locationLink, logoUrl } = parsedData.data;
 
     const existingGym = await PrismaClient.gym.findUnique({
         where: {
@@ -169,7 +170,8 @@ const addGym = asyncHandler(async (req: Request, res: Response) => {
             longitude: Number(longitude),
             location,
             nearBy: nearBy,
-            locationLink
+            locationLink,
+            logoUrl: logoUrl || null, // Optional logo URL
         },
     });
     if (!newGym) {
@@ -216,29 +218,234 @@ const getGymById = asyncHandler(async (req: Request, res: Response) => {
     const gym = await PrismaClient.gym.findUnique({
         where: {
             id: gymId
+        },
+        include: {
+            GymOperatingHours: true,
+            _count: {
+                select: {
+                    Reviews: true,
+                    Trainer: true
+                }
+            },
+            Facilities: {
+                select: {
+                    name: true,
+                    description: true
+                }
+            },
+            Plans: {
+                where: {
+                    isActive: true
+                }
+            }
         }
+
+        // select all needed fields, assuming gym has latitude and longitude fields
+        // e.g. select: { id: true, name: true, latitude: true, longitude: true, ... }
     });
 
     if (!gym) {
         throw new ApiError(404, "Gym not found.");
     }
 
+    if (gym.logoUrl) {
+        const image = await getImage(gym.logoUrl);
+        if (image) {
+            gym.logoUrl = image;
+        } else {
+            gym.logoUrl = null; // Set to null if image retrieval fails
+        }
+    }
+
     const response = new ApiResponse("200", gym, "Gym retrieved successfully");
     res.status(200).json(response);
 });
 
-const getAllgyms = asyncHandler(async (req: Request, res: Response) => {
-    const gyms = await PrismaClient.gym.findMany();
+
+const getAllGymDetails = asyncHandler(async (req: Request, res: Response) => {
+    const gyms = await PrismaClient.gym.findMany({
+        include: {
+            GymOperatingHours: true,
+            _count: {
+                select: {
+                    Reviews: true,
+                    Trainer: true
+                }
+            },
+            Facilities: {
+                select: {
+                    name: true,
+                    description: true
+                }
+            },
+            Plans: {
+                where: {
+                    isActive: true
+                }
+            }
+        }
+
+    })
+
+    // add rating = 5 in all gyms and distance = 5
+    const updatedGyms = gyms.map(gym => ({
+        ...gym,
+        rating: 5, // Default rating
+        distance: 0 // Default distance
+    }));
+
+
     if (gyms.length === 0) {
         throw new ApiError(404, "No gyms found.");
     }
 
-    const response = new ApiResponse("200", gyms, "Gyms retrieved successfully");
+    for (const gym of gyms) {
+        if (gym.logoUrl) {
+            const image = await getImage(gym.logoUrl);
+            if (image) {
+                gym.logoUrl = image;
+            } else {
+                gym.logoUrl = null; // Set to null if image retrieval fails
+            }
+        }
+    }
+
+    const response = new ApiResponse("200", updatedGyms, "Gyms retrieved successfully");
+    res.status(200).json(response);
+})
+
+const getGymsAccordingToLocation = asyncHandler(async (req: Request, res: Response) => {
+    const { latitude, longitude } = req.query;
+    if (!latitude || !longitude) {
+        throw new ApiError(400, "Latitude and longitude are required.");
+    }
+    const lat = parseFloat(latitude as string);
+    const lon = parseFloat(longitude as string);
+    if (isNaN(lat) || isNaN(lon)) {
+        throw new ApiError(400, "Latitude and longitude must be valid numbers.");
+    }
+
+    // Earth radius in km
+    const EARTH_RADIUS_KM = 6371;
+
+    // Convert degrees to radians
+    const deg2rad = (deg: number) => (deg * Math.PI) / 180;
+
+    // Haversine distance between two coords, in km
+    const getDistanceKm = (
+        lat1: number,
+        lon1: number,
+        lat2: number,
+        lon2: number
+    ): number => {
+        const dLat = deg2rad(lat2 - lat1);
+        const dLon = deg2rad(lon2 - lon1);
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(deg2rad(lat1)) *
+            Math.cos(deg2rad(lat2)) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return EARTH_RADIUS_KM * c;
+    };
+
+    // 10 km radius: compute approximate bounding box deltas
+    // 1 deg latitude ≈ 111.32 km
+    const latDelta = 10 / 111.32;
+    // 1 deg longitude ≈ 111.32 * cos(lat) km
+    const lonDelta = 10 / (111.32 * Math.cos(deg2rad(lat)));
+
+    // Fetch gyms within the bounding box
+    const gymsInBox = await PrismaClient.gym.findMany({
+        where: {
+            latitude: {
+                gte: lat - latDelta,
+                lte: lat + latDelta,
+            },
+            longitude: {
+                gte: lon - lonDelta,
+                lte: lon + lonDelta,
+            },
+        },
+        include: {
+            GymOperatingHours: true,
+            _count: {
+                select: {
+                    Reviews: true,
+                    Trainer: true
+                }
+            },
+            Facilities: {
+                select: {
+                    name: true,
+                    description: true
+                }
+            },
+            Plans: {
+                where: {
+                    isActive: true
+                }
+            }
+        }
+
+        // select all needed fields, assuming gym has latitude and longitude fields
+        // e.g. select: { id: true, name: true, latitude: true, longitude: true, ... }
+    });
+
+    // Compute precise distance and filter <= 10 km, also attach distance
+    const gymsWithDistance = gymsInBox
+        .map((gym) => {
+            // assume gym.latitude and gym.longitude are numbers
+            const gymLat = Number(gym.latitude);
+            const gymLon = Number(gym.longitude);
+            const distance = getDistanceKm(lat, lon, gymLat, gymLon);
+            return {
+                ...gym,
+                distance: Number(distance.toFixed(2)), // in km as a number (e.g., 3.42)
+                rating: 5
+            };
+        })
+        .filter((gym) => gym.distance <= 10)
+        // Optionally sort by distance ascending:
+        .sort((a, b) => a.distance - b.distance);
+
+    for (const trainer of gymsWithDistance) {
+        if (trainer.logoUrl) {
+            const image = await getImage(trainer.logoUrl);
+            if (image) {
+                trainer.logoUrl = image;
+            } else {
+                trainer.logoUrl = null; // Set to null if image retrieval fails
+            }
+        }
+    }
+    const response = new ApiResponse("200", gymsWithDistance, "Gyms retrieved successfully");
+
+    res.status(200).json(response);
+});
+
+const uploadGymLogo = asyncHandler(async (req: Request, res: Response) => {
+    const file = req.file;
+    if (!file) {
+        throw new ApiError(400, "No file uploaded.");
+    }
+    const imageName = crypto.randomBytes(16).toString("hex");
+
+    file.originalname = imageName
+
+
+    const uploaded = await uploadImage(file);
+    if (!uploaded) {
+        throw new ApiError(500, "Failed to upload image.");
+    }
+    const response = new ApiResponse("200", { url: file.originalname }, "Image added successfully");
     res.status(200).json(response);
 })
 
 
-export { addGym, getGymById, addImage, deleteImageById, getAllImagesByGymId, getAllgyms };
+
+export { addGym, uploadGymLogo, getGymById, addImage, deleteImageById, getAllImagesByGymId, getAllGymDetails, getGymsAccordingToLocation };
 
 
 

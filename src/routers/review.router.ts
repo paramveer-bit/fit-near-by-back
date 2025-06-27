@@ -6,7 +6,7 @@ import { addReview, getGymReviews, getUserReviews, deleteReview } from "../contr
 const router = Router();
 
 router.post("/:gymId", auth, addReview);
-router.get("/:gymId", getGymReviews);
+router.get("/gym/:gymId", getGymReviews);
 router.get("/user", auth, getUserReviews);
 router.delete("/:reviewId", auth, deleteReview);
 

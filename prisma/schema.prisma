@@ -77,19 +77,18 @@ model Facilities {
 }
 
 model Plans {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   name      String
   oldprice  Float
   newprice  Float
   type      PlanType
   featured  String[]
   gymId     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  isActive  Boolean  @default(true)
-
-  gym     Gym       @relation(fields: [gymId], references: [id])
-  Booking Booking[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  isActive  Boolean   @default(true)
+  gym       Gym       @relation(fields: [gymId], references: [id])
+  Booking   Booking[]
 }
 
 model Trainer {
@@ -118,6 +117,11 @@ model Booking {
   endDate   DateTime
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+  name      String
+  email     String
+  phone     String
+  paymentId String?
+  orderId   String?
   status    BookingStatus @default(PENDING) // pending, confirmed, cancelled
   user      User          @relation(fields: [userId], references: [id])
   gym       Gym           @relation(fields: [gymId], references: [id])
@@ -149,6 +153,7 @@ enum PlanType {
   MONTHLY
   QUARTERLY
   YEARLY
+  HALF_YEARLY
 }
 
 enum PaymentStatus {
