@@ -44,6 +44,8 @@ model Gym {
   longitude    Float
   nearBy       String?
   locationLink String?
+  isVerified   Boolean  @default(false)
+  isActive     Boolean  @default(true)
 
   users             User[]              @relation("GymUsers")
   Image             Image[]

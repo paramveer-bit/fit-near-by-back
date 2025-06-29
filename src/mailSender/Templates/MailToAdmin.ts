@@ -6,11 +6,11 @@ interface GymJoinNotificationProps {
   userName: string;
   userPhone: string;
   userEmail: string;
-  razorpayOrderId: string | null; // Razorpay order ID, can be null if not applicable
+  razorpayOrderId: string | null;
   planName: string;
-  planPrice: string;   // e.g. '$499'
-  startDate: string;   // e.g. '2025-07-01'
-  endDate: string;     // e.g. '2026-06-30'
+  planPrice: string;
+  startDate: string;
+  endDate: string;
 }
 
 const GymJoinNotificationTemplate = ({
@@ -42,7 +42,7 @@ const GymJoinNotificationTemplate = ({
       <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; margin:24px auto; background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
         <!-- Header -->
         <tr>
-          <td style="background-color:#1e73be; padding:20px; text-align:center;">
+          <td style="background-color:#000000; padding:20px; text-align:center;">
             <h1 style="margin:0; color:#ffffff; font-size:22px;">FitNearBy Notification</h1>
           </td>
         </tr>
@@ -50,9 +50,9 @@ const GymJoinNotificationTemplate = ({
         <!-- Gym Info -->
         <tr>
           <td style="padding:16px;">
-            <h2 style="margin:0 0 12px; color:#333333; font-size:18px;">Hello ${gymName},</h2>
+            <h2 style="margin:0 0 12px; color:#333333; font-size:18px;">New booking of  ${gymName},</h2>
             <p style="margin:0 0 8px; color:#555555; font-size:14px;">
-              You have a brand new member joining through FitNearBy!
+              You have a brand new member joining ${gymName}!
             </p>
             <table width="100%" cellpadding="4" cellspacing="0" style="border-collapse:collapse; margin-top:12px;">
               <tr>
@@ -90,7 +90,7 @@ const GymJoinNotificationTemplate = ({
               </tr>
               <tr>
                 <td style="font-weight:bold; color:#333333;">Razorpay Order ID:</td>
-                <td style="color:#555555;">${razorpayOrderId}</td>
+                <td style="color:#555555;">${razorpayOrderId ?? 'N/A'}</td>
               </tr>
             </table>
           </td>

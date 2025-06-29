@@ -9,6 +9,7 @@ import jwt from "jsonwebtoken"
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { uploadImage, deleteImage, getImage } from "../helpers/Image.handler";
+import { urlToHttpOptions } from "url";
 
 
 
@@ -147,7 +148,7 @@ const addGym = asyncHandler(async (req: Request, res: Response) => {
         throw new ApiError(400, "Invalid gym data", parsedData.error.errors);
     }
     const { name, address, email, description, latitude, longitude, nearBy, location, locationLink, logoUrl } = parsedData.data;
-
+    console
     const existingGym = await PrismaClient.gym.findUnique({
         where: {
             email: email
@@ -171,7 +172,7 @@ const addGym = asyncHandler(async (req: Request, res: Response) => {
             location,
             nearBy: nearBy,
             locationLink,
-            logoUrl: logoUrl || null, // Optional logo URL
+            logoUrl: logoUrl, // Optional logo URL
         },
     });
     if (!newGym) {
@@ -217,7 +218,8 @@ const getGymById = asyncHandler(async (req: Request, res: Response) => {
 
     const gym = await PrismaClient.gym.findUnique({
         where: {
-            id: gymId
+            id: gymId,
+            isActive: true // Ensure only active gyms are fetched
         },
         include: {
             GymOperatingHours: true,
@@ -264,6 +266,9 @@ const getGymById = asyncHandler(async (req: Request, res: Response) => {
 
 const getAllGymDetails = asyncHandler(async (req: Request, res: Response) => {
     const gyms = await PrismaClient.gym.findMany({
+        where: {
+            isActive: true
+        },
         include: {
             GymOperatingHours: true,
             _count: {
@@ -282,35 +287,46 @@ const getAllGymDetails = asyncHandler(async (req: Request, res: Response) => {
                 where: {
                     isActive: true
                 }
+            },
+            Image: {
+                take: 1
             }
         }
 
     })
-
-    // add rating = 5 in all gyms and distance = 5
-    const updatedGyms = gyms.map(gym => ({
-        ...gym,
-        rating: 5, // Default rating
-        distance: 0 // Default distance
-    }));
 
 
     if (gyms.length === 0) {
         throw new ApiError(404, "No gyms found.");
     }
 
-    for (const gym of gyms) {
-        if (gym.logoUrl) {
-            const image = await getImage(gym.logoUrl);
-            if (image) {
-                gym.logoUrl = image;
-            } else {
-                gym.logoUrl = null; // Set to null if image retrieval fails
+    const gymsWithUpdatedLogo = await Promise.all(
+        gyms.map(async (gym) => {
+            let updatedLogoUrl = gym.logoUrl;
+            let imageUrl = null;
+            if (gym.logoUrl) {
+                const image = await getImage(gym.logoUrl);
+                updatedLogoUrl = image ? image : null;
             }
-        }
+            if (gym.Image && gym.Image.length > 0) {
+                const image = await getImage(gym.Image[0].url);
+                imageUrl = image ? image : null;
+            }
+            return {
+                ...gym,
+                logoUrl: updatedLogoUrl,
+                rating: 5, // Default rating
+                distance: 0, // Default distanceult
+                image: imageUrl
+            };
+        })
+    );
+
+    if (gymsWithUpdatedLogo.length === 0) {
+        throw new ApiError(404, "No gyms found.");
     }
 
-    const response = new ApiResponse("200", updatedGyms, "Gyms retrieved successfully");
+    const response = new ApiResponse("200", gymsWithUpdatedLogo, "Gyms retrieved successfully");
     res.status(200).json(response);
 })
 
@@ -367,6 +383,7 @@ const getGymsAccordingToLocation = asyncHandler(async (req: Request, res: Respon
                 gte: lon - lonDelta,
                 lte: lon + lonDelta,
             },
+            isActive: true // Ensure only active gyms are fetched
         },
         include: {
             GymOperatingHours: true,
@@ -386,12 +403,16 @@ const getGymsAccordingToLocation = asyncHandler(async (req: Request, res: Respon
                 where: {
                     isActive: true
                 }
+            },
+            Image: {
+                take: 1
             }
         }
 
         // select all needed fields, assuming gym has latitude and longitude fields
         // e.g. select: { id: true, name: true, latitude: true, longitude: true, ... }
     });
+
 
     // Compute precise distance and filter <= 10 km, also attach distance
     const gymsWithDistance = gymsInBox
@@ -410,17 +431,29 @@ const getGymsAccordingToLocation = asyncHandler(async (req: Request, res: Respon
         // Optionally sort by distance ascending:
         .sort((a, b) => a.distance - b.distance);
 
-    for (const trainer of gymsWithDistance) {
-        if (trainer.logoUrl) {
-            const image = await getImage(trainer.logoUrl);
-            if (image) {
-                trainer.logoUrl = image;
-            } else {
-                trainer.logoUrl = null; // Set to null if image retrieval fails
+    //get url helpers
+    const gymsWithUpdatedLogo = await Promise.all(
+        gymsWithDistance.map(async (gym) => {
+            let updatedLogoUrl = gym.logoUrl;
+            let imageUrl = null;
+            if (gym.logoUrl) {
+                const image = await getImage(gym.logoUrl);
+                updatedLogoUrl = image ? image : null;
             }
-        }
-    }
-    const response = new ApiResponse("200", gymsWithDistance, "Gyms retrieved successfully");
+            if (gym.Image && gym.Image.length > 0) {
+                const image = await getImage(gym.Image[0].url);
+                imageUrl = image ? image : null;
+            }
+            return {
+                ...gym,
+                logoUrl: updatedLogoUrl,
+                image: imageUrl
+            };
+        })
+    );
+
+
+    const response = new ApiResponse("200", gymsWithUpdatedLogo, "Gyms retrieved successfully");
 
     res.status(200).json(response);
 });

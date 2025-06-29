@@ -27,7 +27,7 @@ const ConfirmationEmailTemplate = ({
     ">
       <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; margin:20px auto; background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
         <tr>
-          <td style="padding: 24px; text-align: center; background-color: #2d7ff9; color: #ffffff;">
+          <td style="padding: 24px; text-align: center; background-color: #000000; color: #ffffff;">
             <h1 style="margin: 0; font-size: 22px;">Thanks for Reaching Out!</h1>
           </td>
         </tr>

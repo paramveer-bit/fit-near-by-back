@@ -1,23 +1,25 @@
 interface GymJoinNotificationProps {
-    gymName: string;
-    userName: string;
-    userPhone: string;
-    userEmail: string;
-    planName: string;
-    startDate: string; // e.g. '2025-07-01'
-    endDate: string;   // e.g. '2026-06-30'
+  gymName: string;
+  userName: string;
+  userPhone: string;
+  userEmail: string;
+  planName: string;
+  startDate: string; // e.g. '2025-07-01'
+  endDate: string;   // e.g. '2026-06-30'
+  orderId: string | null;
 }
 
 const GymJoinNotificationTemplate = ({
-    gymName,
-    userName,
-    userPhone,
-    userEmail,
-    planName,
-    startDate,
-    endDate
+  gymName,
+  userName,
+  userPhone,
+  userEmail,
+  planName,
+  startDate,
+  endDate,
+  orderId
 }: GymJoinNotificationProps): string => (
-    `<html>
+  `<html>
     <head>
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -31,7 +33,7 @@ const GymJoinNotificationTemplate = ({
     ">
       <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; margin:20px auto; background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
         <tr>
-          <td style="padding:24px; text-align:center; background-color:#2d7ff9; color:#ffffff;">
+          <td style="padding:24px; text-align:center; background-color:#000000; color:#ffffff;">
             <h1 style="margin:0; font-size:24px;">New Member Alert</h1>
             <p style="margin:4px 0 0;">Hey ${gymName}, you’ve got a new member!</p>
           </td>
@@ -50,6 +52,10 @@ const GymJoinNotificationTemplate = ({
               <tr>
                 <td style="padding:8px; font-weight:bold;">Email:</td>
                 <td style="padding:8px;"><a href="mailto:${userEmail}" style="color:#2d7ff9; text-decoration:none;">${userEmail}</a></td>
+              </tr>
+              <tr>
+                <td style="padding:8px; font-weight:bold;">Order ID:</td>
+                <td style="padding:8px;">${orderId ?? 'N/A'}</td>
               </tr>
               <tr>
                 <td style="padding:8px; font-weight:bold;">Plan:</td>

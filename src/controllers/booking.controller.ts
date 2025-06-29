@@ -14,7 +14,6 @@ const createBooking = asyncHandler(async (req: Request, res: Response) => {
     const { gymId, planId, name, phoneNumber, email } = req.body;
     const userId = req.user_id;
 
-    console.log(process.env.RAZORPAY_ID, process.env.RAZORPAY_KEY);
 
     const razorpay = new Razorpay({
         key_id: process.env.RAZORPAY_ID || "",
@@ -39,7 +38,8 @@ const createBooking = asyncHandler(async (req: Request, res: Response) => {
     const gymPlan = await PrismaClient.plans.findFirst({
         where: {
             id: planId,
-            gymId: gymId
+            gymId: gymId,
+            isActive: true // Ensure the plan is active
         }
     });
 
@@ -51,7 +51,6 @@ const createBooking = asyncHandler(async (req: Request, res: Response) => {
 
     // 1 day in start date
     let startDate = new Date();
-    startDate.setDate(startDate.getDate() + 1); // Assuming booking starts from the next day
     let endDate = new Date(startDate);
     if (gymPlan.type === "MONTHLY") {
         endDate.setMonth(endDate.getMonth() + 1);
@@ -127,9 +126,9 @@ const verifyPayment = asyncHandler(async (req: Request, res: Response) => {
         throw new ApiError(400, "Missing payment details");
     }
 
-    // console.log("Verifying payment for booking ID:", booking_id);
+    console.log("Verifying payment for booking ID:", booking_id);
     // Validate booking ID
-    // console.log(razorpay_order_id, razorpay_payment_id, razorpay_signature);
+    console.log(razorpay_order_id, razorpay_payment_id, razorpay_signature);
 
     const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY || "")
     hmac.update(razorpay_order_id + "|" + razorpay_payment_id)
@@ -146,7 +145,7 @@ const verifyPayment = asyncHandler(async (req: Request, res: Response) => {
             }
         });
 
-        if (!booking || booking.planId) {
+        if (!booking || !booking.planId) {
             throw new ApiError(404, "Booking not found for this payment/order ID");
         }
 
@@ -193,6 +192,7 @@ const verifyPayment = asyncHandler(async (req: Request, res: Response) => {
                 planName: plan?.type, // Assuming planId is the name of the plan
                 startDate: booking.startDate.toISOString().split('T')[0],
                 endDate: booking.endDate.toISOString().split('T')[0],
+                orderId: booking.orderId,
             }),
             text: `You have received a new booking from ${booking.name} for the plan ${booking.planId}.`
         });
@@ -203,7 +203,7 @@ const verifyPayment = asyncHandler(async (req: Request, res: Response) => {
         await SendMail({
             from: `${process.env.EMAIL}`,
             to: process.env.ADMIN_EMAIL || "",
-            subject: `New Booking Received from ${booking.name}`,
+            subject: `New Booking Received from ${booking.name} to ${gym.name}`,
             html: MailToAdmin({
                 gymName: gym.name,
                 gymEmail: gym.email,

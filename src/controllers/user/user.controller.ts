@@ -34,6 +34,13 @@ const getUserProfileDetails = asyncHandler(async (req: Request, res: Response) =
                     status: true,
                     createdAt: true,
                     plan: true,
+                    name: true,
+                    phone: true,
+                    email: true,
+                    orderId: true
+                },
+                orderBy: {
+                    createdAt: "desc"
                 }
             },
             Reviews: {
