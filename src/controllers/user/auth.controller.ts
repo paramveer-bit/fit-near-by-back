@@ -29,7 +29,7 @@ const signup = asyncHandler(async (req: Request, res: Response) => {
     // check if email and phone_number already exists
     const user = await PrismaClient.user.findUnique({
         where: {
-            email,
+            email: email.toLowerCase(),
             phone_number
         }
     })
@@ -54,7 +54,7 @@ const signup = asyncHandler(async (req: Request, res: Response) => {
     // create user
     const newUser = await PrismaClient.user.create({
         data: {
-            email,
+            email: email.toLowerCase(),
             phone_number,
             name,
             isVerified: false,
@@ -96,7 +96,7 @@ const signIn = asyncHandler(async (req: Request, res: Response) => {
     //find user with specific email
     const user = await PrismaClient.user.findUnique({
         where: {
-            email
+            email: email.toLowerCase()
         }
     })
 
@@ -154,7 +154,7 @@ const verifyUser = asyncHandler(async (req: Request, res: Response) => {
     // find user with otp
     const user = await PrismaClient.user.findFirst({
         where: {
-            email
+            email: email.toLowerCase(),
         }
     })
 
@@ -228,7 +228,7 @@ const resendOtp = asyncHandler(async (req: Request, res: Response) => {
     // find user with email
     const user = await PrismaClient.user.findFirst({
         where: {
-            email
+            email: email.toLowerCase(),
         }
     })
 

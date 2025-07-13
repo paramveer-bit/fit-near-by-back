@@ -46,7 +46,7 @@ const EmailTemplate = ({
                 lineHeight: '24px',
                 marginBottom: '20px',
               }}>
-                Congratulations on registering on Silent Whisper!
+                Congratulations on registering on Fitnearby!
               </p>
               <p style={{
                 color: '#333333',

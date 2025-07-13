@@ -67,6 +67,20 @@ const addTrainer = asyncHandler(async (req: Request, res: Response) => {
         },
     });
 
+    //get image url if profileUrl is provided
+    if (newTrainer.profileUrl) {
+        const image = await getImage(newTrainer.profileUrl);
+        if (image) {
+            newTrainer.profileUrl = image;
+        } else {
+            newTrainer.profileUrl = null; // Set to null if image retrieval fails
+        }
+    }
+    // Return success response
+    if (!newTrainer) {
+        throw new ApiError(500, "Failed to add trainer.");
+    }
+
     const response = new ApiResponse("200", newTrainer, "Trainer added successfully");
     res.status(200).json(response);
 });

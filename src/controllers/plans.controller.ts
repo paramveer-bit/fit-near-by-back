@@ -12,7 +12,7 @@ const Plan = z.object({
     oldprice: z.number().min(0, { message: "Price should be a positive number" }),
     newprice: z.number().min(0, { message: "Price should be a positive number" }),
     featured: z.array(z.string()).min(1, { message: "At least one feature is required" }),
-    type: z.enum(["TRIAL", "MONTHLY", "QUARTERLY", "YEARLY"])
+    type: z.enum(["TRIAL", "MONTHLY", "QUARTERLY", "YEARLY", "HALF_YEARLY"])
 })
 
 const addPlan = asyncHandler(async (req: Request, res: Response) => {
@@ -57,8 +57,8 @@ const getPlans = asyncHandler(async (req: Request, res: Response) => {
     // get plans
     const plans = await PrismaClient.plans.findMany({
         where: {
-            gymId,
-            isActive: true // Ensure only active plans are fetched
+            gymId
+            // isActive: true // Ensure only active plans are fetched
         }
     });
 

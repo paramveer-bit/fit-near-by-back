@@ -96,7 +96,8 @@ const getAllImagesByGymId = asyncHandler(async (req: Request, res: Response) => 
 
     const gym = await PrismaClient.gym.findUnique({
         where: {
-            id: gymId
+            id: gymId,
+            isActive: true // Ensure only active gyms are fetched
         }
     });
 

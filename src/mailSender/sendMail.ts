@@ -12,9 +12,9 @@ export default async function sendVerificationMail(
         // console.log(process.env.EMAIL)
         // console.log(process.env.PASSWORD)
         const res = await MailHelper({
-            from: 'coderbuddy01@gmail.com',
+            from: 'Fitnearby.as@gmail.com',
             to: email,
-            subject: 'Silent  Whispers verification code',
+            subject: 'Fitnearby verification code',
             html: EmailTemplate({ username, code: verificationCode }),
             text: `Your verification code is ${verificationCode}`
         });
